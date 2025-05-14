@@ -248,13 +248,36 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		}
 	}
 
-	// Send a command to the device
+	/**
+	 * Send a command to the Avitech Titan 9000 device
+	 *
+	 * This method converts ASCII commands to the binary format required by the device
+	 * according to section B.7 of the Avitech Titan 9000 documentation.
+	 *
+	 * The binary format consists of:
+	 * - Header (4 bytes): 0x55 0xAA 0x5A 0xA5
+	 * - Command length (2 bytes, little-endian)
+	 * - Reserved byte (1 byte): 0x00
+	 * - Command ID (2 bytes): 0x02 0x13
+	 * - Frame ID (1 byte): 0x00
+	 * - Inverse Frame ID (1 byte): 0xFF
+	 * - Fixed value (1 byte): 0x01
+	 * - Module ID (1 byte): 0xFE
+	 * - Fixed value (1 byte): 0x00
+	 * - ASCII command (variable length)
+	 * - Checksum (1 byte): Sum modulo 256 of all previous bytes
+	 *
+	 * @param asciiCmd The ASCII command to send
+	 */
 	sendCommand(asciiCmd: string): void {
 		if (this.tcp && this.tcp.isConnected && this.connectionEstablished) {
-			// Create binary command according to section B.7 of the documentation
-			const cmdBytes = Buffer.from(asciiCmd, 'ascii')
+			// Remove any trailing CRLF if present
+			const cleanCmd = asciiCmd.replace(/\r\n$/, '')
+			
+			// Convert ASCII command to binary format according to section B.7 of the documentation
+			const cmdBytes = Buffer.from(cleanCmd, 'ascii')
 			const cmdLength = cmdBytes.length
-			const totalLength = 14 + cmdLength + 1 // Header + command + checksum
+			const totalLength = 14 + cmdLength + 1 // Header (4) + fixed fields (10) + command + checksum (1)
 			
 			// Create buffer for the entire command
 			const buffer = Buffer.alloc(totalLength)
@@ -285,7 +308,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			buffer[11] = 0x01
 			
 			// Module ID (byte 12)
-			buffer[12] = 0xFE  // Changed from 0xFC to 0xFE to match example
+			buffer[12] = 0xFE
 			
 			// Fixed value (byte 13)
 			buffer[13] = 0x00
@@ -300,9 +323,13 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			}
 			buffer[totalLength - 1] = checksum
 			
-			this.log('debug', `Sending command: ${asciiCmd}`)
+			this.log('debug', `Sending command: ${cleanCmd}`)
 			this.log('debug', `Binary format: ${buffer.toString('hex')}`)
+			this.log('debug', `Checksum: 0x${checksum.toString(16).toUpperCase()}`)
+			
+			// Send the command and consider it successful without waiting for response
 			this.tcp.send(buffer)
+			this.log('debug', 'Command sent successfully')
 		} else {
 			this.log('warn', 'Cannot send command, not connected to device')
 		}

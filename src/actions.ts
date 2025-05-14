@@ -36,26 +36,22 @@ export function UpdateActions(self: ModuleInstance): void {
 			// Where GGG is the group (001-099), MMM is the module (000 for all), PPP is the window (000 for all)
 			// L is the load command, and presetX.gpY is the preset file name
 			// X is the preset number, Y is the group number
-			const command = `XP ${groupStr}000000 L preset${presetNumber}.GP${groupNumber}\r\n`
+			const command = `XP ${groupStr}000000 L preset${presetNumber}.GP${groupNumber}`
 
 			self.log('debug', `Recalling preset: preset${presetNumber}.GP${groupNumber}`)
 			self.log('debug', `Command: ${command}`)
 
-			try {
-				// Send the command to the device
-				self.sendCommand(command)
+			// Send the command to the device
+			self.sendCommand(command)
 
-				// Update variables
-				self.setVariableValues({
-					preset_number: presetNumber,
-					group_number: groupNumber,
-				})
+			// Update variables immediately without waiting for response
+			self.setVariableValues({
+				preset_number: presetNumber,
+				group_number: groupNumber,
+			})
 
-				// Check feedbacks to update button states
-				self.checkFeedbacks('preset_loaded')
-			} catch (error) {
-				self.log('error', `Failed to recall preset: ${error}`)
-			}
+			// Check feedbacks to update button states
+			self.checkFeedbacks('preset_loaded')
 		},
 	}
 
