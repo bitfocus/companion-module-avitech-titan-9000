@@ -5,3 +5,14 @@ package-lock.json
 /dist
 DEBUG-*
 /.yarn
+
+# Testing files
+avitech_test.log
+avitech_tester.py
+*.zip
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~

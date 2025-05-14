@@ -408,6 +408,317 @@ class AvitechTester:
         except Exception as e:
             logging.error(f"Error sending command: {e}")
 
+    def test_advanced_protocol_variations(self):
+        """Test advanced protocol variations that might affect command processing"""
+        base_cmd = "XP 001000000 L preset1.GP1"
+        
+        # Test different frame ID combinations
+        for frame_id in [0x00, 0x01, 0x02, 0xFF]:
+            for inverse_frame_id in [0xFF, 0xFE, 0xFD, 0x00]:
+                logging.info(f"Testing with Frame ID: 0x{frame_id:02X}, Inverse: 0x{inverse_frame_id:02X}")
+                self.send_binary_command(
+                    base_cmd,
+                    frame_id=frame_id,
+                    inverse_frame_id=inverse_frame_id,
+                    checksum_method="sum"
+                )
+                response = self.receive_data()
+        
+        # Test different fixed value combinations
+        fixed_values = [(0x01, 0x00), (0x00, 0x00), (0x01, 0x01), (0x00, 0x01)]
+        for fixed_1, fixed_2 in fixed_values:
+            logging.info(f"Testing with Fixed Values: 0x{fixed_1:02X}, 0x{fixed_2:02X}")
+            self.send_binary_command(
+                base_cmd,
+                fixed_value_1=fixed_1,
+                fixed_value_2=fixed_2,
+                checksum_method="sum"
+            )
+            response = self.receive_data()
+
+    def test_command_format_variations(self):
+        """Test different command format variations"""
+        # Base format variations
+        format_variations = [
+            "XP 001000000 L preset1.GP1",
+            "XP001000000Lpreset1.GP1",
+            "XP 001000000L preset1.GP1",
+            "XP 001000000 Lpreset1.GP1",
+            "xp 001000000 l preset1.GP1",  # Lowercase command
+            "XP 001000000 L PRESET1.GP1",  # Uppercase preset
+            "XP 001000000 L preset1.GP1 ",  # Extra space at end
+            " XP 001000000 L preset1.GP1",  # Extra space at start
+        ]
+        
+        for cmd in format_variations:
+            logging.info(f"Testing command format: '{cmd}'")
+            self.send_binary_command(cmd, checksum_method="sum")
+            response = self.receive_data()
+
+    def test_preset_number_range(self):
+        """Test different preset and group number combinations"""
+        # Test various preset numbers
+        for preset_num in [1, 2, 3, 10, 14]:
+            for group_num in [1, 2, 10, 99]:
+                cmd = f"XP {group_num:03d}000000 L preset{preset_num}.GP{group_num}"
+                logging.info(f"Testing preset/group combination: {preset_num}/{group_num}")
+                self.send_binary_command(cmd, checksum_method="sum")
+                response = self.receive_data()
+
+    def test_with_delays(self):
+        """Test commands with various delays between them"""
+        cmd = "XP 001000000 L preset1.GP1"
+        
+        for delay in [0.1, 0.5, 1.0, 2.0]:
+            logging.info(f"Testing with {delay}s delay before command")
+            time.sleep(delay)
+            self.send_binary_command(cmd, checksum_method="sum")
+            response = self.receive_data()
+
+    def test_alternative_commands(self):
+        """Test alternative command types"""
+        commands = [
+            "XN 001000000 E 1",  # Example from documentation
+            "XS 001000000",      # Status command (if supported)
+            "XI 001000000",      # Information command (if supported)
+            "XL 001000000",      # List command (if supported)
+        ]
+        
+        for cmd in commands:
+            logging.info(f"Testing alternative command: {cmd}")
+            self.send_binary_command(cmd, checksum_method="sum")
+            response = self.receive_data()
+
+    def test_packet_structure_variations(self):
+        """Test variations in packet structure"""
+        cmd = "XP 001000000 L preset1.GP1"
+        cmd_bytes = cmd.encode("ascii")
+        
+        # Test with different header values
+        headers = [
+            b"\x55\xaa\x5a\xa5",  # Standard
+            b"\x55\xAA\x5A\xA5",  # Uppercase
+            b"\xa5\x5a\xaa\x55",  # Reversed
+        ]
+        
+        for header in headers:
+            logging.info(f"Testing with header: {binascii.hexlify(header).decode('ascii')}")
+            
+            # Create custom buffer
+            total_length = 14 + len(cmd_bytes) + 1
+            buffer = bytearray(total_length)
+            
+            buffer[0:4] = header
+            buffer[4] = total_length & 0xFF
+            buffer[5] = (total_length >> 8) & 0xFF
+            buffer[6:14] = b"\x00\x02\x13\x00\xFF\x01\xFE\x00"
+            buffer[14:14+len(cmd_bytes)] = cmd_bytes
+            
+            # Calculate sum checksum
+            checksum = sum(buffer[:-1]) & 0xFF
+            buffer[-1] = checksum
+            
+            try:
+                self.socket.send(buffer)
+                logging.debug(f"Sent custom packet: {binascii.hexlify(buffer).decode('ascii')}")
+                response = self.receive_data()
+            except Exception as e:
+                logging.error(f"Error sending custom packet: {e}")
+
+    def test_byte_order_variations(self):
+        """Test variations in byte order for length field"""
+        cmd = "XP 001000000 L preset1.GP1"
+        cmd_bytes = cmd.encode("ascii")
+        total_length = 14 + len(cmd_bytes) + 1
+        
+        # Test with different byte orders for length field
+        byte_orders = [
+            (total_length & 0xFF, (total_length >> 8) & 0xFF),  # Little-endian (default)
+            ((total_length >> 8) & 0xFF, total_length & 0xFF),  # Big-endian
+        ]
+        
+        for byte_order in byte_orders:
+            logging.info(f"Testing with length byte order: 0x{byte_order[0]:02X} 0x{byte_order[1]:02X}")
+            
+            # Create custom buffer
+            buffer = bytearray(total_length)
+            
+            buffer[0:4] = b"\x55\xaa\x5a\xa5"
+            buffer[4] = byte_order[0]
+            buffer[5] = byte_order[1]
+            buffer[6:14] = b"\x00\x02\x13\x00\xFF\x01\xFE\x00"
+            buffer[14:14+len(cmd_bytes)] = cmd_bytes
+            
+            # Calculate sum checksum
+            checksum = sum(buffer[:-1]) & 0xFF
+            buffer[-1] = checksum
+            
+            try:
+                self.socket.send(buffer)
+                logging.debug(f"Sent custom packet: {binascii.hexlify(buffer).decode('ascii')}")
+                response = self.receive_data()
+            except Exception as e:
+                logging.error(f"Error sending custom packet: {e}")
+    
+    def test_command_structure_variations(self):
+        """Test variations in command structure"""
+        # Test different group/module/window number formats
+        group_formats = [
+            "001000000",  # Standard format
+            "1000000",    # No leading zeros for group
+            "001 000 000", # Spaces between numbers
+            "001-000-000", # Dashes between numbers
+        ]
+        
+        for format in group_formats:
+            cmd = f"XP {format} L preset1.GP1"
+            logging.info(f"Testing group format: '{cmd}'")
+            self.send_binary_command(cmd, checksum_method="sum")
+            response = self.receive_data()
+        
+        # Test different load command formats
+        load_formats = [
+            "L",  # Standard
+            "l",  # Lowercase
+            "LOAD", # Full word
+            "load", # Full word lowercase
+        ]
+        
+        for format in load_formats:
+            cmd = f"XP 001000000 {format} preset1.GP1"
+            logging.info(f"Testing load command format: '{cmd}'")
+            self.send_binary_command(cmd, checksum_method="sum")
+            response = self.receive_data()
+    
+    def test_checksum_position_variations(self):
+        """Test variations in checksum position and calculation"""
+        cmd = "XP 001000000 L preset1.GP1"
+        cmd_bytes = cmd.encode("ascii")
+        
+        # Test with checksum at different positions
+        positions = [
+            "end",      # Standard position at end
+            "after_header", # After header (byte 4)
+            "before_cmd",   # Before command (byte 13)
+        ]
+        
+        for position in positions:
+            logging.info(f"Testing checksum at position: {position}")
+            
+            # Create custom buffer
+            total_length = 14 + len(cmd_bytes) + 1
+            buffer = bytearray(total_length)
+            
+            buffer[0:4] = b"\x55\xaa\x5a\xa5"
+            buffer[4] = total_length & 0xFF
+            buffer[5] = (total_length >> 8) & 0xFF
+            buffer[6:14] = b"\x00\x02\x13\x00\xFF\x01\xFE\x00"
+            buffer[14:14+len(cmd_bytes)] = cmd_bytes
+            
+            # Calculate sum checksum of appropriate parts
+            if position == "end":
+                checksum = sum(buffer[:-1]) & 0xFF
+                buffer[-1] = checksum
+            elif position == "after_header":
+                checksum = sum(buffer[0:4]) & 0xFF
+                buffer[4] = checksum
+                buffer[-1] = 0x00  # Zero out the normal checksum position
+            elif position == "before_cmd":
+                checksum = sum(buffer[0:13]) & 0xFF
+                buffer[13] = checksum
+                buffer[-1] = 0x00  # Zero out the normal checksum position
+            
+            try:
+                self.socket.send(buffer)
+                logging.debug(f"Sent custom packet: {binascii.hexlify(buffer).decode('ascii')}")
+                response = self.receive_data()
+            except Exception as e:
+                logging.error(f"Error sending custom packet: {e}")
+    
+    def send_ascii_command(self, ascii_cmd):
+        """Send a command as plain ASCII text without binary protocol wrapping"""
+        if not self.connected:
+            logging.error("Not connected")
+            return False
+        
+        # Add CRLF if not already present
+        if not ascii_cmd.endswith('\r\n'):
+            ascii_cmd = ascii_cmd + '\r\n'
+        
+        # Convert to bytes and send
+        cmd_bytes = ascii_cmd.encode('ascii')
+        
+        logging.info(f"Sending ASCII command: {ascii_cmd.strip()}")
+        logging.debug(f"ASCII bytes: {binascii.hexlify(cmd_bytes).decode('ascii')}")
+        
+        try:
+            self.socket.send(cmd_bytes)
+            return True
+        except Exception as e:
+            logging.error(f"Error sending ASCII command: {e}")
+            return False
+    
+    def test_ascii_commands(self):
+        """Test sending commands as plain ASCII without binary protocol wrapping"""
+        logging.info("Testing ASCII command sending (no binary protocol)")
+        
+        # Test basic preset recall commands
+        ascii_commands = [
+            "XP 001000000 L preset1.GP1",
+            "XP 001000000 L preset2.GP1",
+            "XP 002000000 L preset1.GP2",
+            "XP 001000000 L preset10.GP1",  # Test two-digit preset
+            "XP001000000Lpreset1.GP1",      # No spaces
+            "XP 001000000L preset1.GP1",    # Different spacing
+            "xp 001000000 l preset1.gp1"    # Lowercase
+        ]
+        
+        for cmd in ascii_commands:
+            logging.info(f"Testing ASCII command: '{cmd}'")
+            self.send_ascii_command(cmd)
+            response = self.receive_data(timeout=3)  # Longer timeout for ASCII commands
+            time.sleep(1)  # Add delay between commands
+    
+    def test_comprehensive_combinations(self):
+        """Test comprehensive combinations of various parameters"""
+        logging.info("Running comprehensive combination tests...")
+        
+        # Define parameter variations
+        module_ids = [0xFC, 0xFE]
+        frame_ids = [0x00, 0x01]
+        inverse_frame_ids = [0xFF, 0xFE]
+        fixed_values = [(0x01, 0x00), (0x00, 0x00)]
+        checksum_methods = ["xor", "sum"]
+        cmd_formats = ["XP 001000000 L preset1.GP1", "XP001000000Lpreset1.GP1"]
+        
+        # Test a subset of combinations to avoid too many tests
+        # We'll use a systematic approach to cover important combinations
+        for module_id in module_ids:
+            for frame_id, inverse_frame_id in zip(frame_ids, inverse_frame_ids):
+                for fixed_1, fixed_2 in fixed_values:
+                    for checksum_method in checksum_methods:
+                        for cmd_format in cmd_formats:
+                            logging.info(
+                                f"Testing combination: Module ID=0x{module_id:02X}, "
+                                f"Frame ID=0x{frame_id:02X}, Inverse=0x{inverse_frame_id:02X}, "
+                                f"Fixed Values=0x{fixed_1:02X}/0x{fixed_2:02X}, "
+                                f"Checksum={checksum_method}, Format='{cmd_format}'"
+                            )
+                            
+                            self.send_binary_command(
+                                cmd_format,
+                                module_id=module_id,
+                                frame_id=frame_id,
+                                inverse_frame_id=inverse_frame_id,
+                                fixed_value_1=fixed_1,
+                                fixed_value_2=fixed_2,
+                                checksum_method=checksum_method
+                            )
+                            response = self.receive_data()
+                            
+                            # Add a small delay between tests
+                            time.sleep(0.1)
+
     def run_diagnostics(self):
         """Run a series of diagnostic tests"""
         if not self.connect():
@@ -417,28 +728,117 @@ class AvitechTester:
             # Test basic connectivity
             logging.info("Running diagnostics...")
 
-            # Test the example from documentation first
-            self.test_doc_example()
-
-            # Test preset recall with different formats
-            self.test_preset_recall(1, 1)
-            self.test_preset_recall(2, 1)
-
-            # Try some simple commands with various checksum methods
-            simple_commands = [
-                "XP 001000000 L",
-                "XP 001000000",
-                "XN 001000000 E 1",
-                "XP",
-            ]
-
-            for cmd in simple_commands:
-                logging.info(f"Testing simple command: {cmd}")
-                for method in ["xor", "sum", "crc8", "doc_example"]:
-                    self.send_binary_command(cmd, checksum_method=method)
-                    response = self.receive_data()
-                    if response:
-                        self.analyze_response(response)
+            # Ask user which tests to run
+            print("\nAvailable test suites:")
+            print("1. Basic tests (documentation example, preset recall)")
+            print("2. Advanced protocol variations (frame IDs, fixed values)")
+            print("3. Command format variations (spacing, capitalization)")
+            print("4. Preset number range tests")
+            print("5. Tests with delays")
+            print("6. Alternative command types")
+            print("7. Packet structure variations")
+            print("8. All tests")
+            print("9. Simple commands")
+            print("10. Byte order variations")
+            print("11. Command structure variations")
+            print("12. Checksum position variations")
+            print("13. Comprehensive combinations")
+            print("14. ASCII commands (no binary protocol)")
+            
+            choice = input("\nEnter test numbers to run (comma-separated, e.g. '1,3,5'): ")
+            test_choices = [int(x.strip()) for x in choice.split(',') if x.strip().isdigit()]
+            
+            if not test_choices:
+                print("No valid test choices provided. Running basic tests.")
+                test_choices = [1]
+            
+            if 8 in test_choices:  # All tests
+                test_choices = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14]
+            
+            # Run selected tests
+            if 1 in test_choices:
+                logging.info("Running basic tests...")
+                self.test_doc_example()
+                self.test_preset_recall(1, 1)
+                self.test_preset_recall(2, 1)
+            
+            if 2 in test_choices:
+                logging.info("Running advanced protocol variations...")
+                self.test_advanced_protocol_variations()
+                
+                # Add a special test for the most promising combinations
+                logging.info("Testing most promising combinations...")
+                promising_combinations = [
+                    # Format: (command, module_id, checksum_method)
+                    ("XP 001000000 L preset1.GP1", 0xFE, "sum"),
+                    ("XP 001000000 L preset1.GP1", 0xFC, "sum"),
+                    ("XP001000000Lpreset1.GP1", 0xFE, "sum"),
+                    ("XP 001000000 L preset1.GP1", 0xFE, "xor"),
+                    # Add more combinations you think might work
+                ]
+                
+                for cmd, mod_id, chk_method in promising_combinations:
+                    logging.info(f"Testing promising combination: cmd='{cmd}', module_id=0x{mod_id:02X}, checksum={chk_method}")
+                    self.send_binary_command(cmd, module_id=mod_id, checksum_method=chk_method)
+                    response = self.receive_data(timeout=3)  # Longer timeout for promising combinations
+            
+            if 3 in test_choices:
+                logging.info("Running command format variations...")
+                self.test_command_format_variations()
+            
+            if 4 in test_choices:
+                logging.info("Running preset number range tests...")
+                self.test_preset_number_range()
+            
+            if 5 in test_choices:
+                logging.info("Running tests with delays...")
+                self.test_with_delays()
+            
+            if 6 in test_choices:
+                logging.info("Running alternative command types...")
+                self.test_alternative_commands()
+            
+            if 7 in test_choices:
+                logging.info("Running packet structure variations...")
+                self.test_packet_structure_variations()
+            
+            if 10 in test_choices:
+                logging.info("Running byte order variations...")
+                self.test_byte_order_variations()
+            
+            if 11 in test_choices:
+                logging.info("Running command structure variations...")
+                self.test_command_structure_variations()
+            
+            if 12 in test_choices:
+                logging.info("Running checksum position variations...")
+                self.test_checksum_position_variations()
+            
+            if 13 in test_choices:
+                logging.info("Running comprehensive combinations...")
+                self.test_comprehensive_combinations()
+            
+            if 14 in test_choices:
+                logging.info("Running ASCII command tests...")
+                self.test_ascii_commands()
+                self.test_packet_structure_variations()
+            
+            if 9 in test_choices:
+                logging.info("Running simple command tests...")
+                simple_commands = [
+                    "XP 001000000 L",
+                    "XP 001000000",
+                    "XN 001000000 E 1",
+                    "XP",
+                ]
+                
+                for cmd in simple_commands:
+                    logging.info(f"Testing simple command: {cmd}")
+                    for method in ["xor", "sum", "crc8", "doc_example"]:
+                        self.send_binary_command(cmd, checksum_method=method)
+                        response = self.receive_data()
+                        if response:
+                            self.analyze_response(response)
 
         finally:
             self.disconnect()
