@@ -1,26 +1,26 @@
 {
-	"id": "your-module-name",
-	"name": "your-module-name",
-	"shortname": "module-shortname",
-	"description": "A short one line description of your module",
-	"version": "0.0.0",
+	"id": "avitech-titan-9000",
+	"name": "Avitech Titan 9000",
+	"shortname": "avitech-titan",
+	"description": "Control module for Avitech Titan 9000 devices",
+	"version": "1.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-avitech-titan-9000.git",
+	"bugs": "https://github.com/bitfocus/companion-module-avitech-titan-9000/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Daniel Brodie",
+			"email": "Daniel@brodiegraphics.com"
 		}
 	],
 	"runtime": {
 		"type": "node22",
 		"api": "nodejs-ipc",
-		"apiVersion": "0.0.0",
+		"apiVersion": "1.0.0",
 		"entrypoint": "../dist/main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "Your company",
-	"products": ["Your product"],
-	"keywords": []
+	"manufacturer": "Avitech",
+	"products": ["Titan 9000"],
+	"keywords": ["Video", "Routing", "Multiviewer"]
 }

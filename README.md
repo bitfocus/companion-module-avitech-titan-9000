@@ -1,4 +1,4 @@
-# companion-module-[replace with module name]
+# companion-module-avitech-titan-9000
 
 See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
 

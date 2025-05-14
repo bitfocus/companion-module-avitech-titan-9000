@@ -10,18 +10,20 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'textinput',
 			id: 'host',
-			label: 'Target IP',
-			width: 8,
+			label: 'Device IP Address',
+			width: 12,
 			regex: Regex.IP,
+			tooltip: 'The IP address of your Avitech Titan 9000 device',
 		},
 		{
 			type: 'number',
 			id: 'port',
-			label: 'Target Port',
-			width: 4,
-			min: 1,
-			max: 65535,
-			default: 8000,
+			label: 'Device Port (Fixed at 20036)',
+			width: 6,
+			min: 20036,
+			max: 20036,
+			default: 20036,
+			tooltip: 'The port number of your Avitech Titan 9000 device (Fixed at 20036)',
 		},
 	]
 }
