@@ -36,9 +36,9 @@ export function UpdateActions(self: ModuleInstance): void {
 			// Where GGG is the group (001-099), MMM is the module (000 for all), PPP is the window (000 for all)
 			// L is the load command, and presetX.gpY is the preset file name
 			// X is the preset number, Y is the group number
-			const command = `XP ${groupStr}000000 L preset${presetNumber}.gp${groupNumber}\r\n`
+			const command = `XP ${groupStr}000000 L preset${presetNumber}.GP${groupNumber}\r\n`
 
-			self.log('debug', `Recalling preset: preset${presetNumber}.gp${groupNumber}`)
+			self.log('debug', `Recalling preset: preset${presetNumber}.GP${groupNumber}`)
 			self.log('debug', `Command: ${command}`)
 
 			try {
