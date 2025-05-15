@@ -21,10 +21,10 @@ This module enables integration between [Bitfocus Companion](https://bitfocus.io
 
 ### Connection Settings
 
-| Setting | Description |
-| --- | --- |
+| Setting        | Description                                      |
+| -------------- | ------------------------------------------------ |
 | **IP Address** | The IP address of your Avitech Titan 9000 device |
-| **Port** | The port number (fixed at 20036 by the device) |
+| **Port**       | The port number (fixed at 20036 by the device)   |
 
 ### Device Setup
 
@@ -43,6 +43,7 @@ Before using this module, ensure your Avitech Titan 9000 device:
 - And the second `#` is the group number (1-99)
 
 For example:
+
 - `preset1.GP1` = Preset 1 in Group 1
 - `preset2.GP1` = Preset 2 in Group 1
 - `preset1.GP2` = Preset 1 in Group 2
@@ -51,8 +52,8 @@ When you select a preset in Companion, the module will send a command to load th
 
 ## Available Actions
 
-| Action | Description | Parameters |
-| --- | --- | --- |
+| Action            | Description                           | Parameters                                                |
+| ----------------- | ------------------------------------- | --------------------------------------------------------- |
 | **Preset Recall** | Recall a saved preset from the device | - **Group Number**: (1-99)<br>- **Preset Number**: (1-14) |
 
 ### Example Usage
@@ -64,8 +65,8 @@ When you select a preset in Companion, the module will send a command to load th
 
 ## Available Feedbacks
 
-| Feedback | Description | Parameters |
-| --- | --- | --- |
+| Feedback          | Description                                           | Parameters                                                                                                                                          |
+| ----------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Preset Loaded** | Changes button color when a specific preset is loaded | - **Group Number**: (1-99)<br>- **Preset Number**: (1-14)<br>- **Foreground Color**: Color when active<br>- **Background Color**: Color when active |
 
 ### Example Usage
@@ -77,10 +78,10 @@ When you select a preset in Companion, the module will send a command to load th
 
 ## Available Variables
 
-| Variable | Description |
-| --- | --- |
-| **$(instance:preset_number)** | The number of the currently loaded preset |
-| **$(instance:group_number)** | The group number of the currently loaded preset |
+| Variable                         | Description                                                 |
+| -------------------------------- | ----------------------------------------------------------- |
+| **$(instance:preset_number)**    | The number of the currently loaded preset                   |
+| **$(instance:group_number)**     | The group number of the currently loaded preset             |
 | **$(instance:connection_state)** | The current connection state (Connected/Disconnected/Error) |
 
 ### Example Usage

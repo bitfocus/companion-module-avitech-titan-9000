@@ -38,6 +38,7 @@ This module integrates the Avitech Titan 9000 multiviewer with [Bitfocus Compani
 - And the second `#` is the group number (1-99)
 
 For example:
+
 - `preset1.GP1` = Preset 1 in Group 1
 - `preset2.GP1` = Preset 2 in Group 1
 - `preset1.GP2` = Preset 1 in Group 2
@@ -61,17 +62,20 @@ For example:
 ### Setup Development Environment
 
 1. Clone the repository
+
    ```bash
    git clone https://github.com/danielbrodie/companion-module-avitech-titan-9000.git
    cd companion-module-avitech-titan-9000
    ```
 
 2. Install dependencies
+
    ```bash
    yarn
    ```
 
 3. Start development with automatic recompilation
+
    ```bash
    yarn dev
    ```
