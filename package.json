@@ -10,7 +10,8 @@
 		"build:main": "tsc -p tsconfig.build.json",
 		"dev": "tsc -p tsconfig.build.json --watch",
 		"lint:raw": "eslint",
-		"lint": "npm run lint:raw ."
+		"lint": "npm run lint:raw .",
+		"test": "echo \"No tests specified\" && exit 0"
 	},
 	"license": "MIT",
 	"repository": {
