@@ -41,7 +41,6 @@ coverage/
 .DS_Store
 
 # Documentation with sensitive information
-avitech_commands.md
 
 # Potential sensitive files
 *.log
