@@ -9,6 +9,8 @@ DEBUG-*
 # Testing files
 avitech_test.log
 avitech_tester.py
+avitech_simple_test.py
+avitech_simple_test.log
 *.zip
 
 # Editor files
@@ -16,3 +18,13 @@ avitech_tester.py
 .idea/
 *.swp
 *~
+
+# Documentation with sensitive information
+avitech_commands.md
+
+# Potential sensitive files
+*.log
+*.env
+*credentials*
+*secret*
+*config.local*
