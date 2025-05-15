@@ -150,7 +150,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	}
 
 	// Process incoming data from the device
-	processIncomingData(data: any): void {
+	processIncomingData(data: Buffer): void {
 		this.log('debug', `Received data: ${data.toString('hex')}`)
 
 		// Check for valid header pattern
@@ -184,12 +184,12 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			} else {
 				// This is likely a command response
 				this.log('debug', 'Received command response')
-				
+
 				// Check for error codes according to Table B-6
 				if (data.length >= 11 && data[10] !== 0x00) {
 					// This is an error response
 					let errorMessage = 'Unknown error'
-					
+
 					// Interpret error code according to Table B-6
 					switch (data[10]) {
 						case 0x01:
@@ -219,29 +219,29 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 						case 0x09:
 							errorMessage = 'Command received is incomplete'
 							break
-						case 0x0A:
+						case 0x0a:
 							errorMessage = 'Device (module or sub-module) does not support this command'
 							break
-						case 0x0B:
+						case 0x0b:
 							errorMessage = 'This command does not support MulticastBroadcast command type'
 							break
-						case 0x0C:
+						case 0x0c:
 							errorMessage = 'Cannot execute command in this module'
 							break
-						case 0x0D:
+						case 0x0d:
 							errorMessage = 'Command execution failed'
 							break
-						case 0x0E:
+						case 0x0e:
 							errorMessage = 'File already exist (filename already in use)'
 							break
-						case 0x0F:
+						case 0x0f:
 							errorMessage = 'File does not exist or was not created properly'
 							break
 						case 0x10:
 							errorMessage = 'Number of TCP connection has exceeded system limit'
 							break
 					}
-					
+
 					this.log('error', `Command error: ${errorMessage} (0x${data[10].toString(16).padStart(2, '0')})`)
 				}
 			}
@@ -273,62 +273,62 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		if (this.tcp && this.tcp.isConnected && this.connectionEstablished) {
 			// Remove any trailing CRLF if present
 			const cleanCmd = asciiCmd.replace(/\r\n$/, '')
-			
+
 			// Convert ASCII command to binary format according to section B.7 of the documentation
 			const cmdBytes = Buffer.from(cleanCmd, 'ascii')
 			const cmdLength = cmdBytes.length
 			const totalLength = 14 + cmdLength + 1 // Header (4) + fixed fields (10) + command + checksum (1)
-			
+
 			// Create buffer for the entire command
 			const buffer = Buffer.alloc(totalLength)
-			
+
 			// Header (bytes 0-3)
 			buffer[0] = 0x55
-			buffer[1] = 0xAA
-			buffer[2] = 0x5A
-			buffer[3] = 0xA5
-			
+			buffer[1] = 0xaa
+			buffer[2] = 0x5a
+			buffer[3] = 0xa5
+
 			// Command length (bytes 4-5, little-endian)
 			buffer.writeUInt16LE(totalLength, 4)
-			
+
 			// Reserved (byte 6)
 			buffer[6] = 0x00
-			
+
 			// Command ID (bytes 7-8)
 			buffer[7] = 0x02
 			buffer[8] = 0x13
-			
+
 			// Frame ID (byte 9)
 			buffer[9] = 0x00
-			
+
 			// Inverse Frame ID (byte 10)
-			buffer[10] = 0xFF
-			
+			buffer[10] = 0xff
+
 			// Fixed value (byte 11)
 			buffer[11] = 0x01
-			
+
 			// Module ID (byte 12)
-			buffer[12] = 0xFE
-			
+			buffer[12] = 0xfe
+
 			// Fixed value (byte 13)
 			buffer[13] = 0x00
-			
+
 			// ASCII command (bytes 14+)
 			cmdBytes.copy(buffer, 14)
-			
+
 			// Calculate checksum (last byte) using sum modulo 256
 			let checksum = 0
 			for (let i = 0; i < totalLength - 1; i++) {
-				checksum = (checksum + buffer[i]) & 0xFF // Sum modulo 256
+				checksum = (checksum + buffer[i]) & 0xff // Sum modulo 256
 			}
 			buffer[totalLength - 1] = checksum
-			
+
 			this.log('debug', `Sending command: ${cleanCmd}`)
 			this.log('debug', `Binary format: ${buffer.toString('hex')}`)
 			this.log('debug', `Checksum: 0x${checksum.toString(16).toUpperCase()}`)
-			
+
 			// Send the command and consider it successful without waiting for response
-			this.tcp.send(buffer)
+			void this.tcp.send(buffer)
 			this.log('debug', 'Command sent successfully')
 		} else {
 			this.log('warn', 'Cannot send command, not connected to device')
