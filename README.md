@@ -15,8 +15,8 @@ This module integrates the Avitech Titan 9000 multiviewer with [Bitfocus Compani
 
 ## Requirements
 
-- Bitfocus Companion v3.0 or later
-- Avitech Titan 9000 device with firmware v1.0 or later
+- Bitfocus Companion
+- Avitech Titan 9000 device
 - Network connectivity between Companion and the Avitech Titan 9000 device
 
 ## Installation
@@ -100,3 +100,8 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 For detailed usage instructions, see [HELP.md](./companion/HELP.md).
 
 If you encounter any issues or have questions, please [open an issue](https://github.com/danielbrodie/companion-module-avitech-titan-9000/issues) on GitHub.
+
+## Additional Resources
+
+- [Bitfocus Companion](https://bitfocus.io/companion/)
+- [Avitech Titan 9000](https://www.avitechvideo.com/products/titan-9000)
