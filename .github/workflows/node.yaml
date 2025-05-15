@@ -23,13 +23,16 @@ jobs:
           node-version: 20.x
       - name: Prepare Environment
         run: |
+          npm install -g corepack
           corepack enable
+          corepack prepare yarn@4.9.1 --activate
+          yarn --version
       - name: Prepare Environment (For template repository)
         # Only run this step if the repository is a template repository
         # If you are using this in a module, you can remove this step
         if: ${{ contains(github.repository, 'companion-module-template-') }}
         run: |
-          # Perform an install with immutable flag to prevent lockfile creation
+          # Perform an install with proper flags for Yarn 4
           yarn install --immutable
         env:
           CI: false
@@ -62,7 +65,9 @@ jobs:
           node-version: 20.x
       - name: Prepare Environment
         run: |
+          npm install -g corepack
           corepack enable
+          corepack prepare yarn@4.9.1 --activate
           yarn install --immutable
         env:
           CI: true
