@@ -43,6 +43,8 @@ For example:
 - `preset2.GP1` = Preset 2 in Group 1
 - `preset1.GP2` = Preset 1 in Group 2
 
+**NOTE**: You must use the Avitech utility "Phoenix-Q V1.06" (available on the Avitech website) to create presets with the proper naming format. This utility allows you to save and manage presets on your Avitech Titan 9000 device.
+
 ## Available Actions
 
 - **Recall Preset**: Load a specific preset from a specific group
@@ -109,3 +111,4 @@ If you encounter any issues or have questions, please [open an issue](https://gi
 
 - [Bitfocus Companion](https://bitfocus.io/companion/)
 - [Avitech Titan 9000](https://www.avitechvideo.com/products/titan-9000)
+- [Avitech Command Reference](./avitech_commands.md) - Detailed documentation of the Avitech ASCII Protocol (AAP) commands and implementation notes
