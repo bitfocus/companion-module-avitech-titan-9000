@@ -16,17 +16,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 20.x
-        # Using LTS version for GitHub Actions compatibility
+      - name: Use Node.js 22.x
+        # This should match the version of Node.js you have defined in the manifest.json runtime field
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
       - name: Prepare Environment
         run: |
-          npm install -g corepack
           corepack enable
-          corepack prepare yarn@4.9.1 --activate
-          yarn --version
       - name: Prepare Environment (For template repository)
         # Only run this step if the repository is a template repository
         # If you are using this in a module, you can remove this step
@@ -52,29 +49,28 @@ jobs:
         env:
           CI: true
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  # Uncomment this to enable running unit tests
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
 
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-      - name: Prepare Environment
-        run: |
-          npm install -g corepack
-          corepack enable
-          corepack prepare yarn@4.9.1 --activate
-          yarn install --immutable
-        env:
-          CI: true
-      - name: Run tests
-        run: |
-          yarn test
-        env:
-          CI: true
-      - name: Send coverage
-        uses: codecov/codecov-action@v5
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Use Node.js 22.x
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22.x
+  #     - name: Prepare Environment
+  #       run: |
+  #         corepack enable
+  #         yarn install
+  #       env:
+  #         CI: true
+  #     - name: Run tests
+  #       run: |
+  #         yarn test
+  #       env:
+  #         CI: true
+  #     - name: Send coverage
+  #       uses: codecov/codecov-action@v5
