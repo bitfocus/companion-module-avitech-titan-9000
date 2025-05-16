@@ -4,13 +4,14 @@
 	"main": "dist/main.js",
 	"type": "module",
 	"scripts": {
+		"postinstall": "husky",
 		"format": "prettier -w .",
-		"package": "npm run build && companion-module-build",
-		"build": "rimraf dist && npm run build:main",
+		"package": "run build && companion-module-build",
+		"build": "rimraf dist && run build:main",
 		"build:main": "tsc -p tsconfig.build.json",
 		"dev": "tsc -p tsconfig.build.json --watch",
 		"lint:raw": "eslint",
-		"lint": "npm run lint:raw .",
+		"lint": "run lint:raw .",
 		"test": "echo \"No tests specified\" && exit 0"
 	},
 	"license": "MIT",
@@ -19,16 +20,15 @@
 		"url": "git+https://github.com/bitfocus/companion-module-avitech-titan-9000.git"
 	},
 	"engines": {
-		"node": "^20.0.0",
-		"yarn": "^4.0.0"
+		"node": "^22.14",
+		"yarn": "^4"
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.11.3"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.3.0",
-		"@types/jest": "^29.5.14",
-		"@types/node": "^22.15.18",
+		"@types/node": "^22.14.1",
 		"eslint": "^9.24.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.1",
