@@ -120,9 +120,56 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		this.keepAliveInterval = setInterval(() => {
 			if (this.tcp && this.tcp.isConnected && this.connectionEstablished) {
 				this.log('debug', 'Sending keep-alive packet')
-				// Send a simple command as a keep-alive
-				// This could be a query command or any valid command that doesn't affect the system
-				this.sendCommand('XP 000000000 L Latest\r\n')
+				
+				// According to section B.4 of the documentation, any TCP message will prevent timeout
+				// We'll send a minimal packet that won't affect the device state
+				if (this.tcp) {
+					// Create a minimal valid packet with proper header but no command
+					// This is just to keep the connection alive without changing device state
+					const totalLength = 15 // Header (4) + fixed fields (10) + checksum (1)
+					const buffer = Buffer.alloc(totalLength)
+					
+					// Header (bytes 0-3)
+					buffer[0] = 0x55
+					buffer[1] = 0xaa
+					buffer[2] = 0x5a
+					buffer[3] = 0xa5
+					
+					// Command length (bytes 4-5, little-endian)
+					buffer.writeUInt16LE(totalLength, 4)
+					
+					// Reserved (byte 6)
+					buffer[6] = 0x00
+					
+					// Command ID (bytes 7-8) - using 0x00 0x00 for a no-op
+					buffer[7] = 0x00
+					buffer[8] = 0x00
+					
+					// Frame ID (byte 9)
+					buffer[9] = 0x00
+					
+					// Inverse Frame ID (byte 10)
+					buffer[10] = 0xff
+					
+					// Fixed value (byte 11)
+					buffer[11] = 0x01
+					
+					// Module ID (byte 12)
+					buffer[12] = 0xfe
+					
+					// Fixed value (byte 13)
+					buffer[13] = 0x00
+					
+					// Calculate checksum (last byte)
+					let checksum = 0
+					for (let i = 0; i < totalLength - 1; i++) {
+						checksum = (checksum + buffer[i]) & 0xff
+					}
+					buffer[totalLength - 1] = checksum
+					
+					void this.tcp.send(buffer)
+					this.log('debug', 'Keep-alive packet sent')
+				}
 			}
 		}, 420000) // 7 minutes
 	}
